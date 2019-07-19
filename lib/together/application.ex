@@ -10,6 +10,8 @@ defmodule Together.Application do
     children = [
       # Starts a worker by calling: Together.Worker.start_link(arg)
       # {Together.Worker, arg}
+      Together.StateMachine,
+      Together.Switch
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
