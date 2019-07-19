@@ -3,32 +3,29 @@ extern crate crossbeam_channel;
 
 use std::thread;
 
+const NUM_THREADS: u32 = 10;
+
 fn main() {
     use crossbeam_channel::bounded;
 
-    // Create a channel of unbounded capacity.
     let (s, r) = bounded(0);
 
-    // Send a message into the channel.
-    let s1 = s.clone();
-    thread::spawn(move || {
-        for _ in 0..1000 {
-            s1.send(1).unwrap();
-        }
-    });
-    let s2 = s.clone();
-    thread::spawn(move || {
-        for _ in 0..1000 {
-            s2.send(2).unwrap();
-        }
-    });
-
-    // Receive the message from the channel.
-    loop {
-        match r.recv() {
-            Ok(s) => println!("{}", s),
-            Err(_) => (),
-        }
-        thread::sleep_ms(1000);
+    for _ in 1..NUM_THREADS {
+        let st = s.clone();
+        thread::spawn(move || loop {
+            let name = format!("Process {:?}", thread::current().id());
+            st.send(name).unwrap();
+        });
     }
+
+    for _ in 1..NUM_THREADS {
+        let rt = r.clone();
+        thread::spawn(move || loop {
+            let msg = rt.recv().unwrap();
+            println!("{:?} => {}", thread::current().id(), msg);
+            thread::sleep_ms(1000);
+        });
+    }
+
+    thread::sleep_ms(1000000);
 }
